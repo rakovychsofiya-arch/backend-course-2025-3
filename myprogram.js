@@ -3,8 +3,8 @@ program
 .requiredOption('-i, --input <file>', 'Input file JSON')
 .option('-o, --output<file>', 'Way to file where save results')
 .option('-d, --display', 'Output in console')
-.option('-f, -furnished', 'Furnished house')
-.option('-p, -price <number>', 'price less then:',parseInt);
+.option('-f, --furnished', 'Furnished house')
+.option('-p, --price <number>', 'price less then:',parseInt);
 
 program.parse(process.argv);
 const options = program.opts();
