@@ -21,18 +21,28 @@ process.exit(1);
 if(!options.output &&!options.display&&!options.furnished&&!options.price){
 process.exit(0);
 }
-const simulatedResult = [
-    '13300000 7420',
-    '12250000 8960'
-];
+const rawData = fs.readFileSync(options.input, 'utf8');
+let houses = JSON.parse(rawData); // читаємо масив об'єктів
 
-// Вивід у консоль
-if (options.display) {
-    simulatedResult.forEach(line => console.log(line));
+let filteredHouses = houses;
+
+
+if (options.furnished) {
+    filteredHouses = filteredHouses.filter(h => h.furnishingstatus === 'furnished');
 }
 
-// Запис у файл
+
+if (options.price) {
+    filteredHouses = filteredHouses.filter(h => h.price < options.price);
+}
+
+if (options.display) {
+    filteredHouses.forEach(house => {
+        console.log(`${house.price} ${house.area}`);
+    });
+}
+
 if (options.output) {
-    const outputData = simulatedResult.join('\n');
+    const outputData = filteredHouses.map(h => `${h.price} ${h.area}`).join('\n');
     fs.writeFileSync(options.output, outputData, 'utf8');
 }
