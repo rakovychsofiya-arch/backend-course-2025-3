@@ -1,48 +1,78 @@
-const {program}=require('commander');
-program 
-.requiredOption('-i, --input <file>', 'Input file JSON')
-.option('-o, --output<file>', 'Way to file where save results')
-.option('-d, --display', 'Output in console')
-.option('-f, --furnished', 'Furnished house')
-.option('-p, --price <number>', 'price less then:',parseInt);
-
-program.parse(process.argv);
-const options = program.opts();
-console.log('Option:',options);
+const {program} = require('commander');
 const fs = require('fs');
-if(!options.input){
-    console.error('Please,specify input file');
-process.exit(1);
+
+program 
+  .requiredOption('-i, --input <file>', 'Input file JSON')
+  .option('-o, --output <file>', 'Way to file where save results')
+  .option('-d, --display', 'Output in console')
+  .option('-f, --furnished', 'Furnished house')
+  .option('-p, --price <number>', 'price less then:', parseInt);
+
+program.exitOverride();
+
+try {
+  program.parse(process.argv);
+} catch (err) {
+  // Якщо не вказано обов'язкову опцію
+  if (err.code === 'commander.missingMandatoryOptionValue' || 
+      err.message.includes('required option')) {
+    console.error('ERROR: Please, specify input file -i');
+    process.exit(1);
+  }
+  throw err;
 }
-if(!fs.existsSync(options.input)) {
-     console.error('Cannot find input file');
-process.exit(1);
+
+
+const options = program.opts();
+
+// Перевірка існування файлу
+if (!fs.existsSync(options.input)) {
+  console.error('Cannot find input file');
+  process.exit(1);
 }
-if(!options.output &&!options.display&&!options.furnished&&!options.price){
-process.exit(0);
+
+// Перевірка чи є хоч одна опція обробки
+if (!options.output && !options.display && !options.furnished && !options.price) {
+  process.exit(0);
 }
-const rawData = fs.readFileSync(options.input, 'utf8');
-let houses = JSON.parse(rawData); // читаємо масив об'єктів
+
+// Читання та парсинг JSON
+let houses;
+try {
+  const rawData = fs.readFileSync(options.input, 'utf8');
+  houses = JSON.parse(rawData);
+} catch (error) {
+  console.error('Cannot find input file');
+  process.exit(1);
+}
 
 let filteredHouses = houses;
 
-
+// Фільтрація по furnished
 if (options.furnished) {
-    filteredHouses = filteredHouses.filter(h => h.furnishingstatus === 'furnished');
+  filteredHouses = filteredHouses.filter(h => h.furnishingstatus === 'furnished');
 }
 
-
+// Фільтрація по ціні
 if (options.price) {
-    filteredHouses = filteredHouses.filter(h => h.price < options.price);
+  filteredHouses = filteredHouses.filter(h => h.price < options.price);
 }
 
+// Вивід в консоль
 if (options.display) {
-    filteredHouses.forEach(house => {
-        console.log(`${house.price} ${house.area}`);
-    });
+  filteredHouses.forEach(house => {
+    console.log(`${house.price} ${house.area}`);
+  });
 }
 
+// Запис у файл
 if (options.output) {
-    const outputData = filteredHouses.map(h => `${h.price} ${h.area}`).join('\n');
-    fs.writeFileSync(options.output, outputData, 'utf8');
+  try {
+    const outputData = filteredHouses.map(h => `${h.price} ${h.area}`);
+    fs.writeFileSync(options.output, outputData.join("\n"), "utf8");
+    console.log(`Результат записано у файл ${options.output}`);
+  } catch (error) {
+    console.error(`Помилка запису у файл: ${error.message}`);
+    process.exit(1);
+  }
 }
