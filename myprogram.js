@@ -6,8 +6,10 @@ program
   .option('-o, --output <file>', 'Way to file where save results')
   .option('-d, --display', 'Output in console')
   .option('-f, --furnished', 'Furnished house')
-  .option('-p, --price <number>', 'price less then:', parseInt);
-
+  .option('-p, --price <number>', 'price less then:', parseInt)
+   .configureOutput({
+    writeErr: () => {}  
+  });
 program.exitOverride();
 
 try {
@@ -16,7 +18,7 @@ try {
   // Якщо не вказано обов'язкову опцію
   if (err.code === 'commander.missingMandatoryOptionValue' || 
       err.message.includes('required option')) {
-    console.error('ERROR: Please, specify input file -i');
+    console.error('Please, specify input file');
     process.exit(1);
   }
   throw err;
